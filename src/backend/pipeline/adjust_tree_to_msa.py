@@ -7,17 +7,20 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger('main')
 
 
+def remove_bootstrap_values(in_tree_path, out_tree_path):
+    with open(in_tree_path) as f:
+        tree_as_str = f.read()
+    import re
+    tree_as_str = re.sub('\)\d+:', '):', tree_as_str)
+    with open(out_tree_path, 'w') as f:
+        f.write(tree_as_str)
 
-def adjust_tree_to_msa(msa_path, tree_to_prune_path, tmp_dir, output_path):
 
-    with open(tree_to_prune_path) as f:
-        match = re.search('\)\d+:',f.read())
-        if match:
-            logger.error(f'A bootstrap value was detected ->  {match.group()}')
-            raise TypeError('Cannot prune tree with bootstrap values. Please provide a tree without them.')
+def prune_tree(msa_path, tree_to_prune_path, tmp_dir, output_tree_path,
+               remove_taxa_script_path='/groups/pupko/orenavr2/src/removeTaxa'):
 
+    logger.debug(f'Pruning tree for {msa_path}')
     msa_name = os.path.split(msa_path)[1]
-    logger.debug(f'Creating tree for {msa_path}')
 
     # get list of taxa in the full tree
     tree_taxa = [node.name for node in Phylo.read(tree_to_prune_path, 'newick').get_terminals()]
@@ -25,8 +28,8 @@ def adjust_tree_to_msa(msa_path, tree_to_prune_path, tmp_dir, output_path):
     # get list of taxa in msa
     with open(msa_path) as f:
         msa = f.read()
-    msa_taxa = re.findall(r'>(\S+)\r?\n', msa)
 
+    msa_taxa = re.findall(r'>(\S+)\r?\n', msa)
     list_of_taxa_to_remove = [taxon for taxon in tree_taxa if taxon not in msa_taxa]
 
     # list of names to prune
@@ -34,11 +37,22 @@ def adjust_tree_to_msa(msa_path, tree_to_prune_path, tmp_dir, output_path):
     with open(list_of_taxa_to_remove_path, 'w') as f:
         f.write('\n'.join(list_of_taxa_to_remove))
 
-    cmd_for_prunning = f'/groups/pupko/orenavr2/src/removeTaxa {tree_to_prune_path} {list_of_taxa_to_remove_path} {output_path}'
-    subprocess.run(cmd_for_prunning, shell=True)
+    cmd_for_pruning = f'{remove_taxa_script_path} {tree_to_prune_path} {list_of_taxa_to_remove_path} {output_tree_path}'
+    logger.info(f'Fetching pruning command:\n{cmd_for_pruning}')
+    subprocess.run(cmd_for_pruning, shell=True)
 
-    logger.info(f'Tree was prunned successfully to {output_path}')
 
+def fix_tree(msa_path, tree_to_adjust, tmp_dir, output_tree_path):
+
+    tree_without_bootstrap_path = tree_to_adjust+'.no_bootstrap'
+
+    remove_bootstrap_values(tree_to_adjust, tree_without_bootstrap_path)
+
+    prune_tree(msa_path, tree_without_bootstrap_path, tmp_dir, output_tree_path)
+
+    logger.info(f'Tree was adjusted successfully and was saved to {output_tree_path}')
+
+    return output_tree_path
 
 
 if __name__ == '__main__':
@@ -50,7 +64,7 @@ if __name__ == '__main__':
         parser.add_argument('msa_path',
                             help='A path to an MSA file to which the tree should be adjusted',
                             type=lambda path: path if os.path.exists(path) else parser.error(f'{path} does not exist!'))
-        parser.add_argument('tree_to_prune_path',
+        parser.add_argument('tree_to_adjust',
                             help='A path to a species tree that contains (at least) all the species in the input MSA',
                             type=lambda path: path if os.path.exists(path) else parser.error(f'{path} does not exist!'))
         parser.add_argument('tmp_dir',
@@ -58,10 +72,11 @@ if __name__ == '__main__':
                                  'created. All the species that do not appear in the msa (and thus will be removed) '
                                  'will be written to the file that was created',
                             type=lambda path: path if os.path.exists(path) else parser.error(f'{path} does not exist!'))
-        parser.add_argument('output_path',
-                            help='A path to a file in which the prunned tree will be written',
+        parser.add_argument('output_tree_path',
+                            help='A path to a file in which the pruned tree will be written',
                             type=lambda path: path if os.path.exists(os.path.split(path)[0]) else parser.error(
                                 f'output folder {os.path.split(path)[0]} does not exist!'))
         args = parser.parse_args()
 
-        adjust_tree_to_msa(args.msa_path, args.tree_to_prune_path, args.tmp_dir, args.output_path)
+        fix_tree(args.msa_path, args.tree_to_adjust,
+                 args.tmp_dir, args.output_tree_path)
