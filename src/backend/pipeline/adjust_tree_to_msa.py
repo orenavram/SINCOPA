@@ -1,8 +1,10 @@
 import os
 import subprocess
 import re
-from Bio import Phylo
 import logging
+
+from auxiliaries import get_tree_labels
+
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger('main')
 
@@ -23,7 +25,7 @@ def prune_tree(msa_path, tree_to_prune_path, tmp_dir, output_tree_path,
     msa_name = os.path.split(msa_path)[1]
 
     # get list of taxa in the full tree
-    tree_taxa = [node.name for node in Phylo.read(tree_to_prune_path, 'newick').get_terminals()]
+    tree_taxa = get_tree_labels(tree_to_prune_path)
 
     # get list of taxa in msa
     with open(msa_path) as f:
