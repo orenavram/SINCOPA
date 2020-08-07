@@ -13,6 +13,7 @@ if os.path.exists('/bioseq'):  # remote run
     sys.path.insert(1, '/bioseq/bioSequence_scripts_and_constants')
 
 import CONSTANTS as CONSTS  # from /bioseq/sincopa/
+from auxiliaries import update_html, append_to_html  # from /bioseq/sincopa/
 from email_sender import send_email  # from /bioseq/bioSequence_scripts_and_constants/
 
 
@@ -65,7 +66,7 @@ def write_html_prefix(output_path, run_number):
         <div id="behind-nav-bar-results">
         </div>
         <br><br>
-        <div class="container" style="font-size: 17px; {CONSTS.CONTAINER_STYLE}"  align="justify">
+        <div class="container" style="{CONSTS.CONTAINER_STYLE}" align="justify">
             <br> 
             <br> 
             <br> 
@@ -73,44 +74,57 @@ def write_html_prefix(output_path, run_number):
             <br> 
             <H1 align=center>Job status: <FONT color='red'>QUEUED</FONT></h1>
             <br>
-            {CONSTS.WEBSERVER_NAME.upper()} is now processing your request. This page will be automatically updated every few seconds (until the job is done). You can also reload it manually. Once the job has finished, the output will appear below. A link to this page was sent to your email in case you wish to view these results at a later time without recalculating them. Please note that the results will be kept in the server for 3 months.
+            {CONSTS.PROGRESS_BAR_ANCHOR}
+            <br>
+            {CONSTS.PROCESSING_MSG}A link to this page was sent to your email in case you wish to view these results at a later time without recalculating them. Please note that the results will be kept in the server for 3 months.
             <br><br>
         </div>\n\t\t''')
-        output_path_f.flush()
 
 
-def append_running_parameters_to_html(output_html_path, elution_file_name, flowthrough_file_name,
-                                      el_peptides_file_name, ft_peptides_file_name, database_name,
-                                      digestion_enzymes, enrichment_threshold, job_title):
-    with open(output_html_path, 'a') as output_path_f:
-        output_path_f.write(f'<div class="container" style="{CONSTS.CONTAINER_STYLE}">\n')
+def exit_if_bot(form, wd):
+    # email field should ALWAYS exist in the form (even if it's empty!!).
+    # If it's not there, someone sent a request not via the website so they should be blocked.
+    # confirm_email is a hidden field that only spamming bots might fill in...
+    if 'email' not in form or ('confirm_email' in form and form['confirm_email'].value != ''):
+        shutil.rmtree(wd)
+        exit()
 
-        if el_peptides_file_name != None:
-            output_path_f.write('<div class="row" style="font-size: 20px;"><div class="col-md-12">\n')
-            output_path_f.write(f'<b>Elution peptides list: </b>{el_peptides_file_name}\n')
-            output_path_f.write('</div></div>\n')
 
-            output_path_f.write('<div class="row" style="font-size: 20px;"><div class="col-md-12">\n')
-            output_path_f.write(f'<b>Flow-through peptides list: </b>{ft_peptides_file_name}\n')
-            output_path_f.write('</div></div>\n')
+def peek_form(cgi_debug_path_f, form):
+    # for debugging
+    sorted_form_keys = sorted(form.keys())
+    write_to_debug_file(cgi_debug_path_f,
+                        f'These are the keys that the CGI received:\n{"; ".join(sorted_form_keys)}\n\n')
+    write_to_debug_file(cgi_debug_path_f, 'Form values are:\n')
+    for key in sorted_form_keys:
+        if form[key].filename:
+            write_to_debug_file(cgi_debug_path_f, f'100 first characters of {key} = {form[key].value[:100]}\n')
         else:
-            output_path_f.write('<div class="row" style="font-size: 20px;"><div class="col-md-12">\n')
-            output_path_f.write(f'<b>Elution raw dataset: </b>{elution_file_name}\n')
-            output_path_f.write('</div></div>\n')
+            write_to_debug_file(cgi_debug_path_f, f'{key} = {form[key]}\n')
 
-            output_path_f.write('<div class="row" style="font-size: 20px;"><div class="col-md-12">\n')
-            output_path_f.write(f'<b>Flow-through raw dataset: </b>{flowthrough_file_name}\n')
-            output_path_f.write('</div></div>\n')
+    cgi_debug_path_f.flush()
 
-        # mandatory param row
-        # output_path_f.write('<div class="row" style="font-size: 20px;"><div class="col-md-12">\n')
-        # output_path_f.write(f'<b>Min enrichment ratio: </b>{enrichment_threshold}\n')
-        # output_path_f.write('</div></div>\n')
 
-        output_path_f.write('</div><br>\n')
-        output_path_f.write('\n\n<!--result-->\n\n\t\t')
+def append_running_parameters_to_html(html_path, msa_name, tree_name, input_is_provided_as_text, job_title):
+    content = f'<div class="container" style="{CONSTS.CONTAINER_STYLE}">\n'
 
-        output_path_f.flush()
+    if job_title:
+        content += '<div class="row" style="font-size: 20px;"><div class="col-md-12">\n'
+        content += f'<h2><b>{job_title}</b></h2>\n'
+        content += '</div></div>\n'
+
+    content += '<div class="row" style="font-size: 20px;"><div class="col-md-12">\n'
+    content += f'<b>Multiple sequence alignment:</b> {"raw text" if input_is_provided_as_text else msa_name}\n'
+    content += '</div></div>\n'
+
+    content += '<div class="row" style="font-size: 20px;"><div class="col-md-12">\n'
+    content += f'<b>Phylogenetic tree:</b> {"raw text" if input_is_provided_as_text else tree_name}\n'
+    content += '</div></div>\n'
+
+    content += '</div><br>\n'
+    content += '\n\n<!--result-->\n\n\t\t'
+
+    append_to_html(html_path, content)
 
 
 def write_cmds_file(cmds_file, parameters, run_number):
@@ -125,21 +139,40 @@ def write_cmds_file(cmds_file, parameters, run_number):
         f.write('\n')
 
 
-def save_file_to_disk(cgi_debug_path_f, form, wd, file_type):
-    write_to_debug_file(cgi_debug_path_f, f'{file_type in form}')
-    # if form[file_type].filename in os.listdir(wd):
-    #     write_to_debug_file(cgi_debug_path_f, f'changing file name of :\n{form[file_type].filename}')
-    #     # form[file_type].filename = get_alternative_name(file_type, form, wd)
+def save_file_to_disk(cgi_debug_path_f, form, wd, form_field_name, file_name_on_disk=None):
+    write_to_debug_file(cgi_debug_path_f, f'Saving FILE to disk')
 
-    file_name = form[file_type].filename
-    write_to_debug_file(cgi_debug_path_f, f'file name is:\n{file_name}')
-    # data = form[file_type].value
-    write_to_debug_file(cgi_debug_path_f, f'{file_name} first 100 chars are: {form[file_type].value[:100]}\n')
-    data_path = os.path.join(f'{wd}/{file_type}{os.path.splitext(file_name)[-1]}')
+    uploaded_file_name = form[form_field_name].filename
+    write_to_debug_file(cgi_debug_path_f, f'Uploaded file name is:\n{uploaded_file_name}')
+
+    data = form[form_field_name].value
+    write_to_debug_file(cgi_debug_path_f, f'{uploaded_file_name} first 100 chars are: {data[:100]}\n')
+
+    if file_name_on_disk is None:
+        file_name_on_disk = uploaded_file_name
+    data_path = os.path.join(f'{wd}/{file_name_on_disk}')
+
     with open(data_path, 'wb') as data_f:
-        data_f.write(form[file_type].value)
+        data_f.write(data)
+
     write_to_debug_file(cgi_debug_path_f, f'Uploaded data was saved to {data_path} successfully\n')
-    return data_path, file_name
+
+    return data_path, file_name_on_disk
+
+
+def save_text_to_disk(cgi_debug_path_f, form, wd, form_field_name, file_name_on_disk):
+    write_to_debug_file(cgi_debug_path_f, f'Saving TEXT to disk')
+
+    data = form[form_field_name].value.rstrip()
+    write_to_debug_file(cgi_debug_path_f, f'first 100 chars are: {data[:100]}\n')
+
+    data_path = os.path.join(f'{wd}/{file_name_on_disk}')
+    with open(data_path, 'w') as data_f:
+        data_f.write(data)
+
+    write_to_debug_file(cgi_debug_path_f, f'Uploaded data was saved to {data_path} successfully\n')
+
+    return data_path
 
 
 # def get_alternative_name(file_type, form, wd):
@@ -169,21 +202,21 @@ def run_cgi():
 
     # TODO: redirect
     results_url = os.path.join(CONSTS.WEBSERVER_RESULTS_URL, run_number)
-    results_url = os.path.join(f'https://microbializer.tau.ac.il/results/sincopa_test/{run_number}')
+    results_url = os.path.join(f'https://microbializer.tau.ac.il/results/sincopa/{run_number}')
 
     output_url = os.path.join(results_url, CONSTS.RESULT_WEBPAGE_NAME)
 
     # TODO: redirect
     wd = os.path.join(CONSTS.WEBSERVER_RESULTS_DIR, run_number)
-    wd = os.path.join('/bioseq/data/results/microbializer/sincopa_test/', run_number)
+    wd = os.path.join('/bioseq/data/results/microbializer/sincopa/', run_number)
     os.makedirs(wd)
 
-    output_html_path = os.path.join(wd, CONSTS.RESULT_WEBPAGE_NAME)
+    html_path = os.path.join(wd, CONSTS.RESULT_WEBPAGE_NAME)
     cgi_debug_path = os.path.join(wd, 'cgi_debug.txt')
 
-    page_is_ready = os.path.exists(output_html_path)
+    page_is_ready = os.path.exists(html_path)
     if not page_is_ready:
-        write_html_prefix(output_html_path, run_number)  # html's prefix must be written BEFORE redirecting...
+        write_html_prefix(html_path, run_number)  # html's prefix must be written BEFORE redirecting...
 
     print(f'Location: {output_url}')  # Redirects to the results url. MUST appear before any other print.
     print('Content-Type: text/html\n')  # For more details see https://www.w3.org/International/articles/http-charset/index#scripting
@@ -218,58 +251,39 @@ def run_cgi():
         if form['job_title'].value != '':
             job_title = form['job_title'].value.strip()
 
-        elution_file_name = None
-        flowthrough_file_name = None
-        el_peptides_file_name = None
-        ft_peptides_file_name = None
-        digestion_enzyme = None
-        maxquant_analysis_is_needed = True
-        if form['example_page'].value == 'yes':  # example data
-            write_to_debug_file(cgi_debug_path_f, f'Linking example data FROM {CONSTS.EXAMPLE_DATA_PATH} TO {wd}\n')
-            copy_example_data(wd, cgi_debug_path_f)
-            database_file_name = CONSTS.EXAMPLE_DB_NAME
-            elution_file_name = 'Elution example data'  # CONSTS.ELUTION_FILE_NAMES
-            flowthrough_file_name = 'Flow-through example data'  # CONSTS.FLOWTHROUGH_FILE_NAMES
-            digestion_enzyme = 'Trypsin'  # TODO: check what is recieved when sending several values
-            enrichment_threshold = 5
+        # until here it should roughly be the same in every CGI file!
+
+        write_to_debug_file(cgi_debug_path_f, f'\n{"#" * 80}\nUploading data\n')
+
+        # checkbox fields appears in the form only when set to ON (no need for value checking...)
+        input_is_provided_as_text = 'input_is_provided_as_text' in form
+
+        if input_is_provided_as_text:
+            msa_name = 'msa.fas'
+            msa_path = save_text_to_disk(cgi_debug_path_f, form, wd,
+                                         form_field_name='msa_text', file_name_on_disk=msa_name)
+            tree_name = 'tree.newick'
+            tree_path = save_text_to_disk(cgi_debug_path_f, form, wd,
+                                          form_field_name='tree_text', file_name_on_disk=tree_name)
         else:
-            write_to_debug_file(cgi_debug_path_f, f'\n{"#" * 80}\nuploading data\n')
-            database_file_path, database_file_name = save_file_to_disk(cgi_debug_path_f, form, wd, 'db')
-            enrichment_threshold = form['enrichment_threshold'].value.strip()
-            if 'el' in form and form['el'].filename != '':
-                elution_file_path, elution_file_name = save_file_to_disk(cgi_debug_path_f, form, wd, 'el')
-                flowthrough_file_path, flowthrough_file_name = save_file_to_disk(cgi_debug_path_f, form, wd, 'ft')
-                digestion_enzyme = form[
-                    'enzyme'].value.strip()  # TODO: check what is recieved when sending several values
-            else:
-                maxquant_analysis_is_needed = False
-                _, el_peptides_file_name = save_file_to_disk(cgi_debug_path_f, form, wd, 'el_peptides')
-                _, ft_peptides_file_name = save_file_to_disk(cgi_debug_path_f, form, wd, 'ft_peptides')
+            msa_path, msa_name = save_file_to_disk(cgi_debug_path_f, form, wd, form_field_name='msa_file')
+            tree_path, tree_name = save_file_to_disk(cgi_debug_path_f, form, wd, form_field_name='tree_file')
 
         write_to_debug_file(cgi_debug_path_f, f'ls of {wd} yields:\n{os.listdir(wd)}\n')
 
         write_to_debug_file(cgi_debug_path_f, f'{ctime()}: Writing running parameters to html...\n')
 
         if not page_is_ready:
-            append_running_parameters_to_html(output_html_path, elution_file_name, flowthrough_file_name,
-                                              el_peptides_file_name, ft_peptides_file_name, database_file_name,
-                                              digestion_enzyme, enrichment_threshold, job_title)
+            append_running_parameters_to_html(html_path, msa_name, tree_name, input_is_provided_as_text, job_title)
 
         write_to_debug_file(cgi_debug_path_f, f'{ctime()}: Running parameters were written to html successfully.\n')
 
-        # write_to_debug_file(cgi_debug_path_f, '$$$$$$$')
-        # write_to_debug_file(cgi_debug_path_f, f'wd: {wd}')
-        # write_to_debug_file(cgi_debug_path_f, f'enrichment_threshold: {enrichment_threshold}')
-        parameters = f'{wd} --min-fold {enrichment_threshold}'
-        # write_to_debug_file(cgi_debug_path_f, f'____________________________________________________\n')
-        # write_to_debug_file(cgi_debug_path_f, parameters)
-        if maxquant_analysis_is_needed:
-            parameters += f' --enzymes {form["enzyme"].value} -mq'
+        parameters = f'{msa_path} {tree_path} {wd}/outputs --html_path {html_path}'
 
         cmds_file = os.path.join(wd, 'qsub.cmds')
+        write_cmds_file(cmds_file, parameters, run_number)
 
         job_id_file = os.path.join(wd, 'job_id.txt')
-        write_cmds_file(cmds_file, parameters, run_number)
 
         # a simple command when using shebang header (#!) in q_submitter_power.py
         submission_cmd = f'{CONSTS.Q_SUBMITTER_SCRIPT} {cmds_file} {wd} -q pupkowebr --verbose > {job_id_file}'
@@ -284,13 +298,11 @@ def run_cgi():
         if email != '':
             with open(user_email_file, 'w') as email_f:
                 email_f.write(f'{email}\n')
-
             try:
                 # Send the user a notification email for their submission
-                notify_user(job_title, database_file_name,
-                            elution_file_name, flowthrough_file_name,
-                            el_peptides_file_name, ft_peptides_file_name,
-                            digestion_enzyme, enrichment_threshold, run_number, email)
+                notify_user(run_number, email, job_title,
+                            'raw text' if input_is_provided_as_text else msa_name,
+                            'raw text' if input_is_provided_as_text else tree_name)
             except:
                 write_to_debug_file(cgi_debug_path_f, f'\nFailed sending notification to {email}\n')
 
@@ -310,26 +322,18 @@ def run_cgi():
             except OSError:
                 pass
 
-        write_to_debug_file(cgi_debug_path_f, f'\n\nUpdating status from QUEUED to RUNNING\n')
-        with open(output_html_path) as f:
-            html_content = f.read()
-        html_content = html_content.replace('QUEUED', 'RUNNING')
-        with open(output_html_path, 'w') as f:
-            f.write(html_content)
-
         write_to_debug_file(cgi_debug_path_f, f'\n\n{"#" * 50}\nCGI finished running!\n{"#" * 50}\n')
 
         cgi_debug_path_f.close()
 
     except Exception as e:
-        edit_progress(html_path, active=False)
 
         msg = 'CGI crashed before the job was submitted :('
-        with open(output_html_path) as f:
+        with open(html_path) as f:
             html_content = f.read()
-        html_content = html_content.replace('QUEUED', 'FAILED').replace('RUNNING', 'FAILED')
+        html_content = html_content.replace('QUEUED', 'FAILED')
         html_content += f'<br><br><br><center><h2><font color="red">{msg}</font><br><br>Please try to re-run your job or <a href="mailto:{CONSTS.ADMIN_EMAIL}?subject={CONSTS.WEBSERVER_NAME.upper()}%20Run%20Number%20{run_number}">contact us</a> for further information</h2></center><br><br>\n</body>\n</html>\n'
-        with open(output_html_path, 'w') as f:
+        with open(html_path, 'w') as f:
             f.write(html_content)
 
         exc_type, exc_obj, exc_tb = sys.exc_info()
@@ -355,10 +359,10 @@ def run_cgi():
         from time import sleep
 
         sleep(2 * CONSTS.RELOAD_INTERVAL)
-        with open(output_html_path) as f:
+        with open(html_path) as f:
             html_content = f.read()
         html_content = html_content.replace(CONSTS.RELOAD_TAGS, f'<!--{CONSTS.RELOAD_TAGS}-->')
-        with open(output_html_path, 'w') as f:
+        with open(html_path, 'w') as f:
             f.write(html_content)
 
     # logging submission
@@ -369,19 +373,12 @@ def run_cgi():
         f.write(f'{ctime()}: Submission was documented in \n')
 
 
-def notify_user(job_title, database_file_name,
-                elution_file_name, flowthrough_file_name,
-                el_peptides_file_name, ft_peptides_file_name,
-                digestion_enzyme, enrichment_threshold, run_number, email):
-    job_name = f'Job title: {job_title}\n' if job_title else ''
-    notification_content = f'Your submission details are:\n\n{job_name}BCR-Seq dataset: {database_file_name}\n'
+def notify_user(run_number, email, job_title, msa_name, tree_name):
+    job_name = f'{job_title}\n' if job_title else ''
+    notification_content = f'Your submission details are:\n\n{job_name}'
 
-    if el_peptides_file_name != None:
-        notification_content += f'Elution peptides list: {el_peptides_file_name}\nFlow-through peptides list: {ft_peptides_file_name}'
-    else:
-        notification_content += f'Elution raw dataset: {elution_file_name}\nFlow-through raw dataset: {flowthrough_file_name}\n'
-
-    notification_content += f'Digestion enzyme: {digestion_enzyme}\nMin enrichment ratio: {enrichment_threshold}\n\n'
+    notification_content += f'Multiple sequence alignment: {msa_name}\n'
+    notification_content += f'Phylogenetic tree: {tree_name}\n'
 
     notification_content += f'Once the analysis will be ready, we will let you know! Meanwhile, you can track the ' \
         f'progress of your job at:\n{CONSTS.WEBSERVER_URL}/results/{run_number}/{CONSTS.RESULT_WEBPAGE_NAME}\n\n'
@@ -391,53 +388,6 @@ def notify_user(job_title, database_file_name,
                receiver=f'{email}',
                subject=f'{CONSTS.WEBSERVER_NAME.upper()} - your job has been submitted! (Run number: {run_number})',
                content=notification_content)
-
-
-def copy_example_data(target_dir, cgi_debug_path_f):
-    maxquant_analysis_dir = f'{target_dir}/{CONSTS.MAXQUANT_DIR_NAME}'
-    os.makedirs(maxquant_analysis_dir, exist_ok=True)
-    db_path = f'{CONSTS.EXAMPLE_DATA_PATH}/{CONSTS.EXAMPLE_DB_NAME}'
-
-    for data_type in ['el', 'ft']:
-        raw_path = f'{maxquant_analysis_dir}/{data_type}'
-        write_to_debug_file(cgi_debug_path_f, f'Creating {raw_path}...')
-        os.makedirs(raw_path, exist_ok=True)
-        write_to_debug_file(cgi_debug_path_f, f'Copying {db_path} to {raw_path}')
-        shutil.copy(db_path, f'{target_dir}/{CONSTS.EXAMPLE_DB_NAME}')
-        for file in os.listdir(f'{CONSTS.EXAMPLE_DATA_PATH}/{data_type}'):
-            alias = f'{raw_path}/{file}'
-            write_to_debug_file(cgi_debug_path_f, f'Soft linking {alias}')
-            # TODO: copy example data as zip
-            soft_link_cmd = f'ln -sf {CONSTS.EXAMPLE_DATA_PATH}/{data_type}/{file} {alias}\n'
-            write_to_debug_file(cgi_debug_path_f, f'{soft_link_cmd}')
-            subprocess.run(soft_link_cmd, shell=True)
-
-
-def exit_if_bot(form, wd):
-    # email field should ALWAYS exist in the form (even if it's empty!!).
-    # If it's not there, someone sent a request not via the website so they should be blocked.
-    # confirm_email is a hidden field that only spamming bots might fill in...
-    if 'email' not in form or ('confirm_email' in form and form['confirm_email'].value != ''):
-        shutil.rmtree(wd)
-        exit()
-
-
-def peek_form(cgi_debug_path_f, form):
-    # for debugging
-    sorted_form_keys = sorted(form.keys())
-    write_to_debug_file(cgi_debug_path_f,
-                        f'These are the keys that the CGI received:\n{"; ".join(sorted_form_keys)}\n\n')
-    write_to_debug_file(cgi_debug_path_f, 'Form values are:\n')
-    for key in sorted_form_keys:
-        if not key.startswith(('el', 'ft', 'db')):
-            if 'peptides' in key:
-                write_to_debug_file(cgi_debug_path_f, f'100 first characters of {key} = {form[key].value[:100]}\n')
-            else:
-                write_to_debug_file(cgi_debug_path_f, f'{key} = {form[key]}\n')
-    # for key in sorted_form_keys:
-    #     if 'data' in key:
-    #         write_to_debug_file(cgi_debug_path_f, f'100 first characters of {key} = {form[key].value[:100]}\n')
-    cgi_debug_path_f.flush()
 
 
 if __name__ == '__main__':
