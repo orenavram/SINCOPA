@@ -1,45 +1,10 @@
 import os
 import logging
-import sys
+
+from auxiliaries import load_header2sequences_dict
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger('main')
-
-
-def load_header2sequences_dict(fasta_path, get_length=False, upper_sequence=False):
-    header_to_sequence_dict = {}
-    seq_length = 0
-
-    with open(fasta_path) as f:
-        header = f.readline().lstrip('>').rstrip()
-        sequence = ''
-        for line in f:
-            line = line.rstrip()
-            if line.startswith('>'):
-                seq_length = len(sequence)
-                if upper_sequence:
-                    header_to_sequence_dict[header] = sequence.upper()
-                else:
-                    # leave untouched
-                    header_to_sequence_dict[header] = sequence
-                header = line.lstrip('>')
-                sequence = ''
-            else:
-                sequence += line
-
-        # don't forget last record!!
-        if sequence != '':
-
-            if upper_sequence:
-                header_to_sequence_dict[header] = sequence.upper()
-            else:
-                # leave untouched
-                header_to_sequence_dict[header] = sequence
-
-    if get_length:
-        return header_to_sequence_dict, seq_length
-    else:
-        return header_to_sequence_dict
 
 
 def fix_ambiguous_columns(column, strain2sequence, legal_chars='ACGT-'):
@@ -78,7 +43,7 @@ def fix_msa(msa_path, output_path, minimal_length=300):
 
     for strain in strain2sequence:
         if len(strain2sequence[strain]) != msa_length:
-            raise ValueError(f'Illegal MSA. Not all sequences are of the same length. E.g., {strain} sequence length is {len(strain2sequence[strain])} where others are of length {msa_length}')
+            raise ValueError(f'Illegal MSA. Not all sequences are of the same length. E.g., {strain} sequence length is {len(strain2sequence[strain])} where others are of length {msa_length}.')
 
     for col in range(msa_length):
         fix_ambiguous_columns(col, strain2sequence)
