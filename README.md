@@ -1,4 +1,4 @@
-# <i>SINCOPA</i><br>https://sincopa.tau.ac.il/ <img align="right" src="src/frontend/pics/logo.png"> <!-- width="50%" height="50%"> -->
+# <i>SINCOPA</i><br>https://sincopa.tau.ac.il/ <img align="right" src="src/frontend/pics/logo.png" width="45%" height="45%">
 Detecting selective sweeps in bacteria based on <i>S</i>imilarity of <i>INCO</i>ngruent <i>PA</i>tterns
 
 <p align="justify">
