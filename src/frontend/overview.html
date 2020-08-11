@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <title>SINCOPA Overview</title>
+
+            <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+            <!--<link rel="stylesheet" href="https://gitcdn.github.io/bootstrap-toggle/2.2.2/css/bootstrap-toggle.min.css">-->
+            <link rel="stylesheet" href="css/general.css">
+            <link rel="stylesheet" href="css/nav.css">
+            <link rel="shortcut icon" type="image/x-icon" href="pics/logo.png" />
+
+            <!--files for the select tag-->
+            <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-select/1.12.4/css/bootstrap-select.min.css">
+            <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-select/1.12.4/js/bootstrap-select.min.js"></script>
+
+            <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+            <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+    </head>
+    <body>
+        <nav role="navigation" class="navbar navbar-inverse navbar-fixed-top" id="nav">
+            <div class="jumbotron" id="jumbo">
+                <div class="container">
+                    <div class="row" id="title-row">
+                        <div class="col-md-1">
+                        </div>
+                        <div class="col-md-10">
+                            <span>&nbsp;&nbsp;&nbsp;<img src="pics/logo.png" id="logo_image" class="img-rounded"></span>&nbsp;&nbsp;
+                            <br>
+                            <span id="sub-title"><b>Detecting selective sweeps in bacteria based on <i>Similarity of INCOngruent PAtterns</i></b></span><br>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="container" id="nav_container">
+                <div class="row">
+                    <div class="col-md-1">
+                    </div>
+                    <div class="col-md-9">
+                        <ul class="nav navbar-nav" id="menu-nav">
+                            <li>
+                                <a href="index.html">Home</a>
+                            </li>
+                            <li class="active">
+                                <a href="overview.html">Overview</a>
+                            </li>
+                            <li>
+                                <a href="terms.html">Terms of Use</a>
+                            </li>
+                            <li>
+                                <a href="credits.html">Credits</a>
+                            </li>
+                            <li>
+                                <a href="https://english.tau.ac.il/" id="tau-link" target="_blank">
+                                    <img src=pics/TAU_LOGO.png id="tau-logo">
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </nav>
+        <div id="behind-nav-bar">
+        </div>
+            <div class="container" id="overview_container">
+            <div class="row">
+                <div class="col-md-1">
+                </div>
+                <div class="col-md-10" align="justify">
+                    <h2>Introduction</h2>
+                    Selective sweeps occur when a beneficial mutation spreads rapidly throughout the population
+                    due to natural selection. Methods to identify selective sweeps were developed as a powerful
+                    tool for uncovering the genomic basis of adaption in eukaryotes. Searching for selective sweeps
+                    has proved to be one of the most fruitful ways to detect the footprints selection leaves on
+                    the genome. With a plethora of detection tools, the study of selective sweeps in eukaryotic
+                    systems is a well-established field of research. However, the search for selective sweeps in
+                    bacteria received little to no attention so far.
+                    <br><br>
+
+                    <h2>What is <i>SINCOPA</i>?</h2>
+                    The <i>SINCOPA</i> algorithm is the first ever phylogeny-based algorithm for paritial/soft selective sweeps
+                    detection that is tailored for bacterial data.
+                    <i>SINCOPA</i> is based on detecting similarity of incongruent allelic patterns in a given DNA multiple sequence
+                    alignment (MSA). <i>SINCOPA</i> is freely available to use through this web server.
+                    <br><br>
+
+                    <h2>Input</h2>
+                    <i>SINCOPA</i> accepts as input the following data: (1) A DNA MSA; and (2) A corresponding species
+                    phylogeny. Noteworthy, due to the
+                    algorithm's logic, <b>the phylogeny have to be reconstructed based on external data</b>,
+                    rather than the provided MSA, solely. The MSA sequences may be either upper or lower cased,
+                    as long as they are provided in a legal
+                    <a href="https://www.ncbi.nlm.nih.gov/blast/fasta.shtml" target="_blank">FASTA format</a>.
+                    The MSA may contain ambiguous characters, such as <i>D</i> (which stands for either <i>A</i>, <i>G</i>, or <i>T</i>) and
+                    <i>N</i> (any of the four nucleotides). Such characters will be replaced with the major
+                    (non-ambiguous) nucleotide character in the corresponding column.
+                    The tree may contain more species than the MSA, as long as all the MSA species appear in the
+                    tree exactly in the same name (<i>SINCOPA</i> will remove the unrelated species from the tree). In addition,
+                    the tree can be provided either with/without bootstrap values (this values are automatically ignored
+                    during the analysis).
+
+                    <br><br>
+
+                    <img src="pics/toy_example.png" id="toy_example">
+                    <br>
+                    <b>Figure 1 - First step of <i>SINCOPA</i> on a toy example.</b> Given a DNA MSA (left panel)
+                    and a corresponding species phylogeny (right), each column is being labeled as informative
+                    (i.e., incongruent with the species phylogeny) or not. The non-shaded columns
+                    illustrate the incongruent columns.
+                    Similarly, the shaded columns are congruent with the species phylogeny and thus are
+                    labeled as non-informative for the second (sliding window) step.
+                    <br><br>
+
+                    <h2>Output and methodology<br></h2>
+                    The <i>SINCOPA</i> algorithm basically contains two main steps. In the first step, <i>SINCOPA</i> detects MSA columns
+                    that are incongruent with the provided species phylogeny (see toy example) using the classic Fitch
+                    algorithm (<a href="https://www.jstor.org/stable/2412116">Fitch, 1971</a>). Next, in the second
+                    step, <i>SINCOPA</i> applies a sliding window over the MSA. For each window, it computes
+                    a similarity score, S (0<=S<=1), that (considers the amount of incongruent columns in it and) aims to capture how
+                    conserved this window is. The output of the algorithm is a plot of the S values across the
+                    alignment (the raw data that underlie the plot is also provided).
+
+                    For further examples, please submit a running example (light blue button at the bottom <a href="index.html">here</a>).
+                    For further details about the algorithm, please refer to the <i>SINCOPA</i> algorithm paper.
+
+                    <br><br><br><br>
+                </div>
+            </div>
+        </div>
+        <nav role="navigation" class="navbar-inverse navbar-fixed-bottom ng-binding" style="color: #cccccc; text-align: center; font-family: Calibri">
+            <h4>
+                    Research Site | <a href="https://www.tau.ac.il/~talp/" target="_blank">Pupko Group</a>
+            </h4>
+        </nav>
+    </body>
+</html>
+
+
+
+
+
+
+
