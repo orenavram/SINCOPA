@@ -45,17 +45,17 @@ def fix_msa(msa_path, output_path, minimal_length=300):
         if len(strain2sequence[strain]) != msa_length:
             raise ValueError(f'Illegal MSA. Not all sequences are of the same length. E.g., {strain} sequence length is {len(strain2sequence[strain])} where others are of length {msa_length}.')
 
-    for col in range(msa_length):
-        fix_ambiguous_columns(col, strain2sequence)
-
     logger.info(f'Trimming {os.path.split(msa_path)[-1]}')
     logger.info(f'MSA length before trimming is {msa_length}bps')
     trimmed_msa_length = trim_msa(strain2sequence, msa_length)
     logger.info(f'MSA length after trimming is {trimmed_msa_length}bps (a total of {msa_length - trimmed_msa_length}bps were trimmed)')
 
     if trimmed_msa_length < minimal_length:
-        logger.info(f'Discarding too short MSA (needs to be at least {minimal_length}bps wide).')
+        logger.error(f'Discarding too short MSA (needs to be at least {minimal_length}bps wide).')
         return
+
+    for col in range(trimmed_msa_length):
+        fix_ambiguous_columns(col, strain2sequence)
 
     fixed_alignment = ''
     for strain in strain2sequence:
