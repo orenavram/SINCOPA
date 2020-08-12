@@ -53,11 +53,10 @@ def write_html_prefix(output_path, run_number):
                     <div class="row" id="title-row">
                         <div class="col-md-1">
                         </div>
-                        <div class="col-md-1">
-                            <img src="{CONSTS.WEBSERVER_URL}/pics/logo.png" id="antibody_image" class="img-rounded">
-                        </div>
                         <div class="col-md-10">
-                            <span id="server-title">{CONSTS.WEBSERVER_TITLE}</span><br>
+                            <span >&nbsp;&nbsp;&nbsp;<img src="{CONSTS.WEBSERVER_URL}/pics/logo.png" id="logo_image" class="img-rounded"></span>&nbsp;&nbsp;
+                            <br>
+                            <span id="sub-title">{CONSTS.WEBSERVER_TITLE}<br>
                         </div>
                     </div>
                 </div>
@@ -67,8 +66,6 @@ def write_html_prefix(output_path, run_number):
         </div>
         <br><br>
         <div class="container" style="{CONSTS.CONTAINER_STYLE}" align="justify">
-            <br> 
-            <br> 
             <br> 
             <br> 
             <br> 
@@ -196,19 +193,14 @@ def run_cgi():
     # random_chars = "".join(choice(string.ascii_letters + string.digits) for x in range(20))
     # adding 20 random digits to prevent users guess a number and see data that are not their's
     run_number = str(round(time())) + str(randint(10 ** 19, 10 ** 20 - 1))
-    run_number = str(randint(1, 10 ** 3 - 1))
     # if form['example_page'].value == 'yes':
     #     run_number = 'example'
 
-    # TODO: redirect
     results_url = os.path.join(CONSTS.WEBSERVER_RESULTS_URL, run_number)
-    results_url = os.path.join(f'https://microbializer.tau.ac.il/results/sincopa/{run_number}')
 
     output_url = os.path.join(results_url, CONSTS.RESULT_WEBPAGE_NAME)
 
-    # TODO: redirect
     wd = os.path.join(CONSTS.WEBSERVER_RESULTS_DIR, run_number)
-    wd = os.path.join('/bioseq/data/results/microbializer/sincopa/', run_number)
     os.makedirs(wd)
 
     html_path = os.path.join(wd, CONSTS.RESULT_WEBPAGE_NAME)
