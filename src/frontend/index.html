@@ -151,7 +151,7 @@
                             <div class="form-group row">
                                 <div class="col-md-5">
                                     <label for="email">Email:</label>
-                                    <input type="email" class="form-control" id="email" name="email" placeholder="We'll send you a link to the results" required value="orenavr2@mail.tau.ac.il">
+                                    <input type="email" class="form-control" id="email" name="email" placeholder="We'll send you a link to the results" required> <!--value="orenavr2@mail.tau.ac.il">-->
                                     <input class="form-control" name="confirm_email" type="hidden">
                                 </div>
                                 <div class="col-md-5">
@@ -205,14 +205,17 @@
                                     <div class="modal-content">
                                         <div class="modal-header">
                                             <button type="button" class="close" data-dismiss="modal">&times;</button>
-                                            <h3 class="modal-title">DNA Multiple Sequence Alignment input file</h3>
+                                            <h3 class="modal-title">DNA multiple sequence alignment input</h3>
                                         </div>
                                         <div class="modal-body" align="justify">
-                                            The input sequences should be aligned. If your sequences are unaligned, you
+                                            The input sequences should be aligned (if they are unaligned, you
                                             may use different alignment programs such as
                                             <a href="https://www.ebi.ac.uk/goldman-srv/webprank/" target="_blank">PRANK</a>
                                             or
-                                            <a href="https://mafft.cbrc.jp/alignment/server/" target="_blank">MAFFT</a>.
+                                            <a href="https://mafft.cbrc.jp/alignment/server/" target="_blank">MAFFT</a>).
+                                            Ambiguous characters (such as 'N') will be replaced by the major character
+                                            in the corresponding column. We will provide the "adjusted MSA" as one
+                                            of the outputs.
                                         </div>
                                     </div>
                                 </div>
@@ -225,14 +228,21 @@
                                     <div class="modal-content">
                                         <div class="modal-header">
                                             <button type="button" class="close" data-dismiss="modal">&times;</button>
-                                            <h3 class="modal-title">Flow-through raw files</h3>
+                                            <h3 class="modal-title">Phylogenetic species tree</h3>
                                         </div>
                                         <div class="modal-body" align="justify">
-                                            Uploaded raw files should be in a ".raw" format.
-                                            All Flow-through raw files should be archived into
-                                            a single ".zip" file and uploaded together.
-                                            Please use neither spaces nor commas in the different file names as
-                                            it might cause to an unexpected behavior.<br>
+                                            The input tree should be in newick format. It has to contain all the
+                                            species in the provided MSA but it may contain other species as well
+                                            (don't worry! we will get rid of them for you and give you the
+                                            "adjusted" tree in the output folder). It may also
+                                            contain bootstrap values (don't bother to remove them). Noteworthy,
+                                            <b>the tree should be reconstructed based on different data then the
+                                            MSA provided</b>, for example, using
+                                            <a href="https://microbializer.tau.ac.il/" target="_blank">M1CR0B1AL1Z3R</a>
+                                            or any other phylogeny reconstruction such as
+                                            <a href="http://www.atgc-montpellier.fr/phyml/" target="_blank">PhyML</a>
+                                            or
+                                            <a href="https://raxml-ng.vital-it.ch/#/" target="_blank">RaXML</a>.<br>
                                         </div>
                                     </div>
                                 </div>
@@ -245,20 +255,17 @@
                                     <div class="modal-content">
                                         <div class="modal-header">
                                             <button type="button" class="close" data-dismiss="modal">&times;</button>
-                                            <h3 class="modal-title">Elution peptides text file</h3>
+                                            <h3 class="modal-title">DNA multiple sequence alignment input</h3>
                                         </div>
                                         <div class="modal-body" align="justify">
-                                            A single ".txt" file containing the peptides and their intensities
-                                            (in each replicate), detected by MaxQuant analysis over the Elution fraction.
-                                            After running MaxQuant, this file can be found in the following path:
-                                            <br>
-                                            $maxquant_output_folder/combined/txt/peptides.txt
-                                            <br>
-                                            Notice that the different replications should be set as different experiments (a, b, c, etc...)
-                                            when running MaxQuant (see example configuration file
-                                            <a href="https://SINCOPA.tau.ac.il/example/mqpar_template.xml" target="_blank">here</a>).
-                                            Please use neither spaces nor commas in the different file names as
-                                            it might cause to an unexpected behavior.<br>
+                                            The input sequences should be aligned (if they are unaligned, you
+                                            may use different alignment programs such as
+                                            <a href="https://www.ebi.ac.uk/goldman-srv/webprank/" target="_blank">PRANK</a>
+                                            or
+                                            <a href="https://mafft.cbrc.jp/alignment/server/" target="_blank">MAFFT</a>).
+                                            Ambiguous characters (such as 'N') will be replaced by the major character
+                                            in the corresponding column. We will provide the "adjusted MSA" as one
+                                            of the outputs.
                                         </div>
                                     </div>
                                 </div>
@@ -271,20 +278,21 @@
                                     <div class="modal-content">
                                         <div class="modal-header">
                                             <button type="button" class="close" data-dismiss="modal">&times;</button>
-                                            <h3 class="modal-title">Flow-through peptides text file</h3>
+                                            <h3 class="modal-title">Phylogenetic species tree</h3>
                                         </div>
                                         <div class="modal-body" align="justify">
-                                            A single ".txt" file containing the peptides and their intensities
-                                            (in each replicate), detected by MaxQuant analysis over the Flow-through fraction.
-                                            After running MaxQuant, this file can be found in the following path:
-                                            <br>
-                                            $maxquant_output_folder/combined/txt/peptides.txt
-                                            <br>
-                                            Notice that the different replications should be set as different experiments (a, b, c, etc...)
-                                            when running MaxQuant (see example configuration file
-                                            <a href="https://SINCOPA.tau.ac.il/example/mqpar_template.xml" target="_blank">here</a>).
-                                            Please use neither spaces nor commas in the different file names as
-                                            it might cause to an unexpected behavior.<br>
+                                            The input tree should be in newick format. It has to contain all the
+                                            species in the provided MSA but it may contain other species as well
+                                            (don't worry! we will get rid of them for you and give you the
+                                            "adjusted" tree in the output folder). It may also
+                                            contain bootstrap values (don't bother to remove them). Noteworthy,
+                                            <b>the tree should be reconstructed based on different data then the
+                                            MSA provided</b>, for example, using
+                                            <a href="https://microbializer.tau.ac.il/" target="_blank">M1CR0B1AL1Z3R</a>
+                                            or any other phylogeny reconstruction such as
+                                            <a href="http://www.atgc-montpellier.fr/phyml/" target="_blank">PhyML</a>
+                                            or
+                                            <a href="https://raxml-ng.vital-it.ch/#/" target="_blank">RaXML</a>.<br>
                                         </div>
                                     </div>
                                 </div>
@@ -327,7 +335,7 @@
                             <input type="checkbox" id="open_advanced_flag" value="off" hidden>
                             <button type="submit" class="btn btn-success btn-lg" id="success"><span class="glyphicon glyphicon-cloud-upload"></span>&nbsp;Submit</button>
                             <br><br>
-                            <button type="reset" class="btn btn-danger btn-lg"><span class="glyphicon glyphicon-trash"></span>&nbsp;Reset form</button>
+                            <button type="button" class="btn btn-danger btn-lg" onclick="resetForm()"><span class="glyphicon glyphicon-trash"></span>&nbsp;Reset form</button>
                             <button type="button" class="btn btn-info btn-lg" onclick="loadExample()">Load example data</button>
                             <!--<a href="index.html"><button type="button" class="btn btn-info">Clear Example</button></a>-->
                             <br><br><br><br>
