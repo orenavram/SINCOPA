@@ -92,7 +92,7 @@
                                 </label>
                             </div>
                             <div class="form-group" id="msa_file_div">
-                                <b>MSA file:</b>
+                                <b>DNA MSA file:</b>
                                 <button type="button" class="btn-primary-outline glyphicon label-modal" data-toggle="modal" data-target="#msa_file_modal">&#xe085;</button><br>
                                 <label class="btn btn-default btn-file">
                                     <input type="file" name="msa_file" id="msa_file" accept="fas,fasta,txt,fna">  <!--onchange="$('#upload-file-info').val($(this).val());"-->
@@ -208,13 +208,15 @@
                                             <h3 class="modal-title">DNA multiple sequence alignment input</h3>
                                         </div>
                                         <div class="modal-body" align="justify">
-                                            The input sequences should be aligned (if they are unaligned, you
+                                            The provided file should be in a
+                                            <a href="https://www.ncbi.nlm.nih.gov/blast/fasta.shtml" target="_blank">FASTA format</a>.
+                                            The sequences should be aligned (if they are unaligned, you
                                             may use different alignment programs such as
                                             <a href="https://www.ebi.ac.uk/goldman-srv/webprank/" target="_blank">PRANK</a>
                                             or
                                             <a href="https://mafft.cbrc.jp/alignment/server/" target="_blank">MAFFT</a>).
                                             Ambiguous characters (such as 'N') will be replaced by the major character
-                                            in the corresponding column. We will provide the "adjusted MSA" as one
+                                            in the corresponding column. We will provide the "adjusted MSA" file as one
                                             of the outputs.
                                         </div>
                                     </div>
@@ -236,7 +238,7 @@
                                             (don't worry! we will get rid of them for you and give you the
                                             "adjusted" tree in the output folder). It may also
                                             contain bootstrap values (don't bother to remove them). Noteworthy,
-                                            <b>the tree should be reconstructed based on different data then the
+                                            <b>the tree should be reconstructed based on different data than the
                                             MSA provided</b>, for example, using
                                             <a href="https://microbializer.tau.ac.il/" target="_blank">M1CR0B1AL1Z3R</a>
                                             or any other phylogeny reconstruction such as
