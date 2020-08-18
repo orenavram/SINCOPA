@@ -1,8 +1,27 @@
 from Bio import Phylo
+import logging
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger('main')
 
 
 def get_tree_labels(tree_to_prune_path):
-    return [node.name for node in Phylo.read(tree_to_prune_path, 'newick').get_terminals()]
+    i = 0
+    logger.info(f'Extracting leaf labels from {tree_to_prune_path}')
+    while True:
+        i += 1
+        logger.info(f'Iteration #{i}')
+        if i > 100:
+            logger.info(f'Failed 100 times to extract leaf labels from {tree_to_prune_path}!')
+            raise AssertionError(f'Failed 100 times to extract leaf labels from {tree_to_prune_path}!')
+        try:
+            tree = Phylo.read(tree_to_prune_path, 'newick')
+            result = [leaf.name for leaf in tree.get_terminals()]
+            break
+        except:
+            pass
+
+    return result
 
 
 def fail(error_msg, error_file_path):
