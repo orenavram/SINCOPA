@@ -59,7 +59,7 @@ def fix_msa(msa_path, output_path, minimal_length=300):
 
     fixed_alignment = ''
     for strain in strain2sequence:
-        fixed_alignment += '>' + strain + '\n' + strain2sequence[strain] + '\n'
+        fixed_alignment += f'>{strain}\n{strain2sequence[strain]}\n'
 
     with open(output_path, 'w') as f:
         f.write(fixed_alignment)

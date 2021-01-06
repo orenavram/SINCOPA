@@ -262,7 +262,7 @@ if __name__ == '__main__':
                             type=lambda path: path if os.path.exists(path) else parser.error(f'{path} does not exist!'))
         parser.add_argument('input_tree_path',
                             help='A path to a background species tree that contains (at least) all the species in the '
-                                 'input MSA. The tree should be reconstruted by en external data and not by the MSA '
+                                 'input MSA. The tree should be reconstructed by en external data and not by the MSA '
                                  'provided.',
                             type=lambda path: path if os.path.exists(path) else parser.error(f'{path} does not exist!'))
         parser.add_argument('output_dir_path',
