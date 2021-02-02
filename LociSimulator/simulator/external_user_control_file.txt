@@ -1,0 +1,17 @@
+100 #pop_size
+100 #num_of_pops
+100 #num_of_generations
+100000000 #super_generation
+5 #num_of_loci 2 non-recombining, 1 selective, 2 non-selective
+250 #locus_len
+2 #num_of_non_recombining_loci
+0.99 #selective_allele_timing_proportion (relevant only to the selective locus)
+2 #selection_intensity. set to 1 for no selection
+0.25 #p_a
+0.25 #p_c
+0.25 #p_g
+0.5 #p_transition
+1e-6 #mutation_rate_per_nucleotide_per_generation (multiplied by locus_len and num_of_loci to get mutation_rate_per_BACTERIUM_per_generation). 2.2e-10 Was taken from: http://www.pnas.org/content/109/41/E2774.full.pdf
+0.38 #r_to_m_rate (multiplied by mutation_rate_per_bacterium_per_generation to get recombination_rate_per_bacterium_per_generation). set to 0 for no recombination. r/m should be 0.38 for E.coli by Yaaras paper: http://www.pnas.org/content/suppl/2014/10/09/1413272111.DCSupplemental/pnas.201413272SI.pdf
+0.05 #between_pops_recombination_rate_to_recombination_rate_per_bacterium_per_generation (multiplied by recombination_rate_per_bacterium_per_generation to get between_pops_recombination_rate_per_bacterium_per_generation)
+./output/ #output_directory
