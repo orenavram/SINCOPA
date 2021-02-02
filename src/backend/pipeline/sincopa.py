@@ -116,12 +116,14 @@ def fix_input(msa_path, tree_path, output_dir, tmp_dir):
     return fixed_msa_path, adjusted_tree
 
 
-def sincopa(msa_path, tree_path, output_dir, tmp_dir):
+def sincopa(msa_path, tree_path, window_size, output_dir, tmp_dir):
     homplasy_path = f'{output_dir}/homoplasy.txt'
     control_file_path = os.path.join(tmp_dir, 'control.txt')
     sweeps_scores_path = f'{output_dir}/sweeps_scores.txt'
     sweeps_plot_path = f'{output_dir}/sweeps_scores.png'
     sweeps_summary_path = f'{output_dir}/sweeps_summary.txt'
+    done_path = f'{output_dir}/done.txt'
+
     # write summary header
     header = 'msa_name,max_score,number_of_sequences,centrality,msa_length,window_size,index_of_max,' \
              'mean_score,median_score,max_mean_division,max_median_division,relative_location_of_peak,' \
@@ -134,12 +136,16 @@ def sincopa(msa_path, tree_path, output_dir, tmp_dir):
     sleep(CONSTS.RELOAD_INTERVAL)
 
     # step 2
-    compute_sweeps_score(msa_path, homplasy_path, sweeps_scores_path,
-                         sweeps_summary_path, sweeps_plot_path, stats_writing_mode='a')
+    compute_sweeps_score(msa_path, homplasy_path, sweeps_scores_path, sweeps_summary_path,
+                         sweeps_plot_path, window_size, stats_writing_mode='a')
+
+    # make sure sweeps summary file is ready
     sleep(CONSTS.RELOAD_INTERVAL)
+    with open(done_path, 'w'):
+        pass
 
 
-def main(msa_path, tree_path, output_dir_path, html_path):
+def main(msa_path, tree_path, window_size, output_dir_path, html_path):
 
     error_path = f'{output_dir_path}/error.txt'
     try:
@@ -156,7 +162,7 @@ def main(msa_path, tree_path, output_dir_path, html_path):
 
         msa_path, tree_path = fix_input(msa_path, tree_path, output_dir_path, tmp_dir)
 
-        sincopa(msa_path, tree_path, output_dir_path, tmp_dir)
+        sincopa(msa_path, tree_path, window_size, output_dir_path, tmp_dir)
 
         if html_path:
             shutil.make_archive(final_zip_path, 'zip', output_dir_path)
@@ -268,6 +274,8 @@ if __name__ == '__main__':
         parser.add_argument('output_dir_path',
                             help='A path to a folder in which the sweeps analysis will be written.',
                             type=lambda path: path.rstrip('/'))
+        parser.add_argument('--window_size', type=int, default=50,
+                            help='The size of a window to which a score will be computed')
         parser.add_argument('--html_path', default=None,
                             help='A path to an html file that will be updated during the run.',
                             type=lambda path: path if os.path.exists(path) else parser.error(f'{path} does not exist!'))
@@ -281,6 +289,6 @@ if __name__ == '__main__':
         else:
             logging.basicConfig(level=logging.INFO)
 
-        main(args.input_msa_path, args.input_tree_path, args.output_dir_path, args.html_path)
+        main(args.input_msa_path, args.input_tree_path, args.window_size, args.output_dir_path, args.html_path)
 
 
