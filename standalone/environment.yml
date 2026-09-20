@@ -1,0 +1,10 @@
+name: sincopa
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  - python>=3.6
+  - biopython
+  - numpy
+  - matplotlib
+  - scikit-learn
